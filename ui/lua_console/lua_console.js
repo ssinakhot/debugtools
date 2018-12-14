@@ -108,6 +108,11 @@ App.StonehearthLuaConsoleEnvironmentView = App.View.extend({
             self._curHistoryIdx = self._history.length - 1;
 
             var outputArea = self.$('.output');
+            if (command == 'clear') {
+                outputArea.html('');
+                return;
+            }
+
             outputArea.append($('<div class="cmdIn">').text('> ' + command));
 
             var resultContainer = $('<div class="cmdOut progress">').text('...');
