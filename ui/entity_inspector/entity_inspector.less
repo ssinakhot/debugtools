@@ -20,21 +20,45 @@
    position: absolute;
    top: 10px;
    left: 0px;
-   //font-size: 18px;
-   //line-height: 13px;
    min-width: 250px;
-   //background: rgba(0,0,0,0.5);
-   //color: #fff;
-   //font-family: "munro_smallregular";
+   white-space: nowrap;
+
+   #header {
+      div {
+         display: inline-block;
+         height: 21px;
+         line-height: 20px;
+      }
+
+      #search {
+         float: right;
+         height: 18px;
+      }
+   }
+
+   .modelId {
+      display: inline-block;
+      width: 50px;
+   }
+
+   .collapser {
+      color: white;
+      font-size: 20px;
+      line-height: 18px;
+      display: inline-block;
+      cursor: pointer;
+      height: 14px;
+      overflow: hidden;
+   }
 
    #legend {
       padding-top: 10px;
    }
 
    #content {
-      max-height: 900px;
+      max-height: 850px;
       overflow-y: scroll;
-      max-width: 700px;
+      max-width: 750px;
       overflow-x: scroll;
    }
 
@@ -59,8 +83,27 @@
    }
 
    .row {
-      &:hover {
+      &.hover-child {
          background: rgba(1,1,1,0.2);
+      }
+      &:hover {
+         background: rgba(1,1,1,0.4);
+      }
+
+      &.hasSearchResult {
+         background-color: #3d0b6f;
+      }
+
+      &.searchResult {
+         background-color: rebeccapurple;
+      }
+
+      .args {
+         color: #808080;
+      }
+
+      .progress {
+         color: #8f91ec;
       }
    }
 
@@ -69,23 +112,19 @@
    }
 
    .activity {
-      color: #808080;
+      font-size: 13px;
+      text-shadow: 0px 0px 1px;
+      letter-spacing: 0.3pt;
    }
 
    .thinking {
-      color: #FF9536;
+      color: #00CFFF;
    }
    .ready {
       color: #D0D000;
    }
-   .stopped {
+   .stopped, .rejected {
       color: #D02828;
-   }
-   .stopped-waiting {
-      color: #D02828;
-   }
-   .stopped-not_selected {
-      color: #C05050;
    }
    .started {
       color: #00B028;
@@ -96,7 +135,7 @@
    .finished {
       color: #508050;
    }
-   .dead {
+   .potential {
       color: #C0C0C0;
    }
 }

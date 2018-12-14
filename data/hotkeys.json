@@ -1,0 +1,11 @@
+{
+   "keys": {
+      "debugtools:lua_console": {
+         "display_name": "i18n(debugtools:ui.lua_console)",
+         "category": "debug",
+         "ordinal": 15,
+         "combo1": "backquote",
+         "combo2": ""
+      }
+   }
+}

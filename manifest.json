@@ -1,20 +1,12 @@
 {
    "info": {
-      "name": "debugtools",
-      "display_name": "Stonehearth Debug Tools",
+      "name": "Debug Tools",
+      "namespace": "debugtools",
       "version": 3,
+      "is_debug_mod": true,
       "default_enabled": false
    },
    "server_init_script": "file(debugtools_server)",
-   "mixintos": {
-      "stonehearth:mixins:base_human": "file(mixintos/base_human/base_human.json)"
-   },
-   "components": {
-      "animation_debug_text": "file(components/animation_debug_text/animation_debug_text_component.lua)"
-   },
-   "component_renderers": {
-      "animation_debug_text": "file(renderers/animation_debug_text/animation_debug_text_renderer.lua)"
-   },
    "ui": {
       "html": [
          "file(/ui/campaign_browser/campaign_browser.html)",
@@ -26,7 +18,8 @@
          "file(/ui/job_monitor/job_monitor.html)",
          "file(/ui/trace_monitor/trace_monitor.html)",
          "file(/ui/item_dropper/item_dropper.html)",
-         "file(/ui/lua_console/lua_console.html)"
+         "file(/ui/lua_console/lua_console.html)",
+         "file(/ui/time_slider/time_slider.html)"
       ],
       "js": [
          "file(ui/debug_dock/debug_dock.js)",
@@ -40,7 +33,8 @@
          "file(/ui/job_monitor/job_monitor.js)",
          "file(/ui/trace_monitor/trace_monitor.js)",
          "file(/ui/item_dropper/item_dropper.js)",
-         "file(/ui/lua_console/lua_console.js)"
+         "file(/ui/lua_console/lua_console.js)",
+         "file(/ui/time_slider/time_slider.js)"
       ],
       "less": [
          "file(/html/font-awesome-4.3.0/css/font-awesome.min.css)",
@@ -54,8 +48,12 @@
          "file(/ui/job_monitor/job_monitor.less)",
          "file(/ui/trace_monitor/trace_monitor.less)",
          "file(/ui/item_dropper/item_dropper.less)",
-         "file(/ui/lua_console/lua_console.less)"
+         "file(/ui/lua_console/lua_console.less)",
+         "file(/ui/time_slider/time_slider.less)"
       ]
+   },
+   "mixintos": {
+      "stonehearth:hotkeys": "file(data/hotkeys.json)"
    },
    "functions": {
       "interrupt_ai": {
@@ -250,6 +248,10 @@
          "controller": "file(call_handlers/debugtools_commands.lua)",
          "endpoint": "server"
       },
+      "on_profiler_disabled": {
+         "controller": "file(call_handlers/debugtools_commands.lua)",
+         "endpoint": "server"
+      },
       "print_ai_stack_command": {
          "controller": "file(call_handlers/debugtools_commands.lua)",
          "endpoint": "server"
@@ -266,7 +268,7 @@
          "controller": "file(call_handlers/debugtools_commands.lua)",
          "endpoint": "server"
       },
-      "set_enable_animation_text_command": {
+      "show_animation_text_command": {
          "controller": "file(call_handlers/debugtools_commands.lua)",
          "endpoint": "server"
       },
@@ -278,6 +280,11 @@
          "controller": "file(call_handlers/debugtools_commands.lua)",
          "endpoint": "client"
       }
+   },
+   "object_commands": {
+      "entity_tracker": [
+         "load_entities_command"
+      ]
    },
    "default_locale": "en"
 }

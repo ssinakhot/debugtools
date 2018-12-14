@@ -208,6 +208,37 @@
    </ul>
 </script>
 
+<script type="text/x-handlebars" data-template-name="stonehearthObjectBrowserDeliveryQuestEncounter">
+   <div class='title'>
+      {{ view.encounter_name }}
+   </div>
+   <div class='subtitle'> Delivery Quest </div>  
+
+   <ul class="menu">
+    <li><a href="#" {{action "forceComplete" target="view"}}> Force Complete </a></li>
+   </ul>
+</script>
+
+<script type="text/x-handlebars" data-template-name="stonehearthObjectBrowserDispatchQuestEncounter">
+   <div class='title'>
+      {{ view.encounter_name }}
+   </div>
+   <div class='subtitle'> Dispatch Quest </div>
+   <table>
+      {{#if view.progress.time_left }}
+         <tr><td>Time left: </td><td>{{ view.progress.time_left }}</td></tr>
+      {{/if}}
+   </table>
+
+   <ul class="menu">
+      {{#if view.progress.time_left }}
+         <li><i class="fa fa-bolt fa-fw fa-lg"></i><a href="#" {{action "triggerNow" target="view"}}> Trigger Now </a></li>
+      {{/if}}
+   </ul>
+</script>
+
+
+
 <script type="text/x-handlebars" data-template-name="stonehearthObjectBrowserDebugCommands">
    <div id="objectBrowser">
       <div id="toolbar">

@@ -76,7 +76,10 @@ App.StonehearthObjectBrowserView = App.View.extend({
          }
       });
 
-      $('#uriInput').keypress(function(e) {
+      $('#uriInput').keypress(function (e) {
+         if (self.isDestroying || self.isDestroyed) {
+            return;
+         }
          if (e.which == 13) {
             $(this).blur();
             self.navigateTo($(this).val());
@@ -333,6 +336,8 @@ App.StonehearthObjectBrowserEncounterView = App.ContainerView.extend({
          'stonehearth:game_master:encounters:wait_for_time_of_day' : 'StonehearthObjectBrowserWaitForTimeOfDayEncounterView',
          'stonehearth:game_master:encounters:wait_for_requirements_met' : 'StonehearthObjectBrowserWaitForRequirementsMetView',
          'stonehearth:game_master:encounters:collection_quest' :     'StonehearthObjectBrowserCollectionQuestEncounterView',
+         'stonehearth:game_master:encounters:delivery_quest' :   'StonehearthObjectBrowserDeliveryQuestEncounterView',
+         'stonehearth:game_master:encounters:dispatch_quest' : 'StonehearthObjectBrowserDispatchQuestEncounterView',
       }
 
       var type = obj.script.__controller;
@@ -437,10 +442,7 @@ App.StonehearthObjectBrowserWaitEncounterView = App.StonehearthObjectBrowserBase
       triggerEdge: function(edge_name) {
          this._call_encounter('trigger_now_cmd', edge_name)
       }
-   },
-   ctxUpdated: function() {
-      console.log('model ctx updated!')
-   }.observes('model.ctx')
+   }
 });
 
 App.StonehearthObjectBrowserGeneratorEncounterView = App.StonehearthObjectBrowserBaseView.extend({
@@ -512,6 +514,29 @@ App.StonehearthObjectBrowserCollectionQuestEncounterView = App.StonehearthObject
          this._call_encounter('force_return_now_cmd');
       },
    }
+});
+
+App.StonehearthObjectBrowserDeliveryQuestEncounterView = App.StonehearthObjectBrowserBaseView.extend({
+   templateName: 'stonehearthObjectBrowserDeliveryQuestEncounter',
+   pollRate: 500,
+   actions: {
+      forceComplete: function() {
+         this._call_encounter('force_complete')
+      },
+   }
+});
+
+App.StonehearthObjectBrowserDispatchQuestEncounterView = App.StonehearthObjectBrowserBaseView.extend({
+   templateName: 'stonehearthObjectBrowserDispatchQuestEncounter',
+   pollRate: 500,
+   actions: {
+      triggerNow: function() {
+         this._call_encounter('trigger_now_cmd');
+      }
+   },
+   ctxUpdated: function() {
+      console.log('model ctx updated!')
+   }.observes('model.ctx')
 });
 
 App.stonehearthObjectBrowserDebugCommandsView = App.View.extend({

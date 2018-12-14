@@ -1,17 +1,5 @@
 $(document).on('stonehearthReady', function(){
    App.debugDock.addToDock(App.StonehearthLuaConsoleIcon);
-   radiant.call('radiant:get_config', 'mods.debugtools.enable_lua_console_hotkey')
-      .done(function (o) {
-         if (o['mods.debugtools.enable_lua_console_hotkey']) {
-            $(top).bind('keydown', function (e) {
-               if (e.keyCode == 192 && !e.originalEvent.repeat) { // Tilde/backtick
-                  App.debugView.getView(App.StonehearthLuaConsoleIcon).$().click();
-                  e.preventDefault();
-                  e.stopPropagation();
-               }
-            });
-         }
-      });
 });
 
 App.StonehearthLuaConsoleIcon = App.View.extend({
@@ -31,6 +19,7 @@ App.StonehearthLuaConsoleIcon = App.View.extend({
             App.debugView.addView(App.StonehearthLuaConsoleView);
          }
       });
+      this._super();
    }
 });
 
@@ -59,7 +48,7 @@ App.StonehearthLuaConsoleView = App.View.extend({
       self.get('envContainerInstance').pushObject(self.serverEnv);
       self.get('envContainerInstance').pushObject(self.clientEnv);
 
-      setTimeout(function () { self.switchEnv(true); }, 1);
+      setTimeout(function () { self.switchEnv(false); }, 1);
    },
 
    switchEnv: function (isClient) {
@@ -134,11 +123,20 @@ App.StonehearthLuaConsoleEnvironmentView = App.View.extend({
                   outputArea.scrollTop(outputArea[0].scrollHeight);
                })
                .fail(function (o) {
-                  if (typeof o.error == 'string') {
-                     // Client failures don't decode. We should fix it at the root, but this hack here is fine for now.
-                     o = JSON.parse(o.error)
+                  // Failures are reported in various formats:
+                  //   {"error":"{\"error\":\"lua runtime error\"}"}
+                  //   {"error":"{\"result\":\"ERROR: [string \\\"return asd\\\"]:1: variable 'asd' is not declared\"}"}
+                  //   {"error":"lua runtime error"}
+                  //   {"result":"ERROR: [string \"return asd\"]:1: variable 'asd' is not declared"}
+                  // We should fix it at the root, but this hack here is fine for now.
+                  var error = o.result || o.error;
+                  try {
+                     o = JSON.parse(error);
+                     error = o.result || o.error;
+                  } catch (e) {
+                     // This is fine.
                   }
-                  resultContainer.removeClass('progress').addClass('error').text(o.result);
+                  resultContainer.removeClass('progress').addClass('error').text(error);
                   outputArea.scrollTop(outputArea[0].scrollHeight);
                });
 

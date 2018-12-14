@@ -40,13 +40,15 @@ var D3Node = SimpleClass.extend({
 
       if (!self._trace) {
          // trace uri
-         self._trace = new RadiantTrace(self._uri)
-            .progress(function(o) {
-               self._update(o);
-            })
-            .fail(function(o) {
-               console.log('failed to trace game master node', o)
-            })
+         if (self._uri) {
+            self._trace = new RadiantTrace(self._uri)
+               .progress(function (o) {
+                  self._update(o);
+               })
+               .fail(function (o) {
+                  console.log('failed to trace game master node', o)
+               })
+         }
       }
 
       // Tell are children to start tracing
@@ -280,7 +282,10 @@ App.StonehearthGameMasterView = App.View.extend({
       self.$().draggable();
       
       radiant.call_obj('stonehearth.game_master', 'get_root_node_command')
-         .done(function(o) {
+         .done(function (o) {
+            if (self.isDestroying || self.isDestroyed) {
+               return;
+            }
             if (o.child_nodes.length <= 0) {
                self.set('notYetStarted', true);
             }
@@ -296,11 +301,12 @@ App.StonehearthGameMasterView = App.View.extend({
                   if (self._nodeInspector)  {
                      self._nodeInspector.destroy();
                   }
+                  if (!node.data) return;
                   self._nodeInspector = App.debugView.addView(App.StonehearthObjectBrowserView, {
                      uri: node.data.__self,
                      relativeTo: {
-                        top: node.x,
-                        left: node.y - 700,
+                        top: node.x + 25,
+                        left: node.y - 700 - this.container.scrollLeft
                      }
                   });
                }

@@ -29,7 +29,7 @@ App.StonehearthAiRowView = App.View.extend({
 
    _onModelDepthUpdated: function() {
       var depth = this.get('model.depth');
-      var styleOverride = 'padding-left: ' + (depth * 4) + 'px';
+      var styleOverride = 'padding-left: ' + (depth * 6) + 'px';
       this.set('styleOverride', styleOverride);
    }.observes('model.depth'),
 
@@ -41,10 +41,31 @@ App.StonehearthAiRowView = App.View.extend({
    }.observes('model').on('init'),
 
    // Uncomment to observe the models as they go flying by
-   _onModelUpdated: function() {
-      //console.log('ai row model is ', this.get('model'));
+   _onModelUpdated: function () {
+      if (this.get('model.children') && this.$('.collapser')) {
+         this.$('.collapser').css({ opacity: this.get('model.children').length ? 1 : 0 });
+      }
+      self.$('#search').change();
    }.observes('model').on('init'),
-   //
+
+   didInsertElement: function () {
+      var self = this;
+      this._super();
+      self.$('.collapser').click(function () {
+         var childRows = self.$('.collapser').closest('.row').siblings();
+         childRows.toggle();
+         $(this).text(childRows.is(':visible') ? '-' : '+');
+      });
+      self.$('.row').dblclick(function () {
+         $('.collapser', this).click();
+      });
+      self.$('.row').mouseenter(function () {
+         $('.row', $(this).siblings()).addClass('hover-child');
+      });
+      self.$('.row').mouseleave(function () {
+         $('.row', $(this).siblings()).removeClass('hover-child');
+      });
+   },
 });
 
 // Execution frame.  Is recursive, so we can't use an inline view
@@ -86,6 +107,7 @@ App.StonehearthEntityInspectorView = App.View.extend({
 
    didInsertElement: function() {
       var self = this;
+      this._super();
       self.$().draggable();
       var selected = App.stonehearthClient.getSelectedEntity();
       if (selected) {
@@ -95,18 +117,37 @@ App.StonehearthEntityInspectorView = App.View.extend({
       $("#entityInspector").on('stepThis', function(evt, data) {
          self.set('pathdata', data);
       });
+
+      self.$('#search').on('input change paste', function () {
+         var query = self.$('#search').val().trim().toLowerCase();
+         var needles = query.length ? query.split(/\s+/) : [];
+         self.$('.row').removeClass('hasSearchResult');
+         self.$('.row').each(function () {
+            var haystack = $(this).text().toLowerCase();
+            var matches = needles.length > 0 && needles.every(function (needle) {
+               return haystack.indexOf(needle) >= 0;
+            });
+            $(this).toggleClass('searchResult', matches);
+            if (matches) {
+               $(this).parents().children('.row:first-child').addClass('hasSearchResult');
+            }
+         });
+      });
    },
 
    _updateAiComponent: function() {
       var self = this;
       self.set('model.debug_info', undefined)
-      radiant.call_obj(self.get('model.stonehearth:ai'), 'get_debug_info')
-         .done(function(o) {
-            self.set('model.debug_info', o.debug_info);
-         })
-         .fail(function(o) {
-            console.log(o);
-         });
+      let objectAddress = self.get('model.stonehearth:ai');
+      if (objectAddress) {
+         radiant.call_obj(objectAddress, 'get_debug_info')
+            .done(function(o) {
+               self.set('model.debug_info', o.debug_info);
+            })
+            .fail(function(o) {
+               console.log(o);
+            });
+      }
    }.observes('model.stonehearth:ai'),
 
    destroy: function() {

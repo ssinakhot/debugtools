@@ -34,17 +34,20 @@
       "entity_inspector": {
          "thinking": "thinking",
          "ready": "ready",
-         "stopped_waiting": "stopped (waiting)",
-         "stopped_not_selected": "stoped (not selected)",
+         "stopped": "stopped (not selected)",
          "started": "started",
          "running": "running",
          "finished": "finished",
-         "dead": "dead",
-         "execution_frame": "Execution Frame",
-         "execution_unit": "Execution Unit",
+         "potential": "potential",
+         "execution_frame": "Frame",
+         "execution_unit": "Unit",
+         "leaf_action": "Leaf Action",
          "compound_action": "Compound Action",
+         "task_action": "Task Action",
+         "task_group_action": "Task Group Action",
          "key": "Key",
          "row_key": "Row Key"
-      }
+      },
+      "lua_console": "Lua Console"
    }
 }

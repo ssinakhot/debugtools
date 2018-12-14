@@ -20,7 +20,7 @@ App.StonehearthPerfmonView = App.View.extend({
    loading: false,
    history: [],
    forwardHistory: [],
-   long_ticks_only: true,
+   long_ticks_only: false,
    init: function() {
       var self = this;
 
@@ -82,6 +82,14 @@ App.StonehearthPerfmonView = App.View.extend({
          },
       },
 
+      radiant.call('radiant:get_config', 'lua.max_profile_length')
+         .done(function (o) {
+               var maxProfileLength = o['lua.max_profile_length'];
+               if (maxProfileLength && maxProfileLength > 0) {
+                  self._maxProfileLength = maxProfileLength;
+               }
+         });
+
       self._perf_trace = new RadiantTrace();
       self._super();
    },
@@ -89,13 +97,14 @@ App.StonehearthPerfmonView = App.View.extend({
    didInsertElement: function() {
       var self = this;
 
+      self._profiling = false;
       this.$().draggable();
 
       this.$('.close').click(function() {
          self.destroy();
       });
 
-      self._srv_perf_trace = radiant.call('radiant:game:get_perf_counters')
+      self._srv_perf_trace = radiant.call('radiant:get_perf_counters')
          .progress(function(data) {
             self._updateCounters(data, 'server');
          });
@@ -112,6 +121,7 @@ App.StonehearthPerfmonView = App.View.extend({
 
    willDestroyElement: function() {
       this.$().find('.tooltipstered').tooltipster('destroy');
+      this._destroyIntervalTimer();
       this._super();
    },
 
@@ -198,17 +208,57 @@ App.StonehearthPerfmonView = App.View.extend({
       this.set('counters_' + counterType, counters);
    },
 
+   _pollElapsed: function() {
+      var self = this;
+      var elapsed = new Date().getTime() - self._startTime;
+      self.set('elapsedTime', elapsed);
+
+      if (elapsed >= self._maxProfileLength && !self.get('long_ticks_only')) {
+         self._destroyIntervalTimer();
+         radiant.call('debugtools:on_profiler_disabled')
+            .done(function (response) {
+               self._profilerCb(response);
+            });
+      }
+   },
+
+   _destroyIntervalTimer: function() {
+      if (this._interval) {
+         clearInterval(this._interval);
+         this._interval = null;
+      }
+   },
+
+   _profilerCb: function(response) {
+      var self = this;
+      if (self.isDestroying || self.isDestroyed) {
+         return;
+      }
+      self.set('profiler_enabled', response.profiler_enabled);
+      self.set('long_ticks_only', response.long_ticks_only);
+
+      // Keep track of time elapsed for profiler.
+      // Note: this does not check max_profiler_length, so the profiling
+      // may have stopped even though the timer is still going
+      if (response.profiler_enabled) {
+         self.set('elapsedTime', 0);
+         self._startTime = new Date().getTime();
+         self._destroyIntervalTimer();
+         self._interval = setInterval(function() { self._pollElapsed(); }, 100);
+      } else {
+         self._destroyIntervalTimer();
+      }
+   },
+
    actions: {
       toggleLongTickProfile: function() {
          var self = this;
-         var long_ticks = self.$('#long_ticks_enabled').is(':checked');
-         radiant.call('debugtools:toggle_profiler', long_ticks)
-            .done(function(response) {
-               self.set('profiler_enabled', response.profiler_enabled);
-               self.set('long_ticks_only', response.long_ticks_only);
+         var longTicks = self.$('#long_ticks_enabled').is(':checked');
+         radiant.call('debugtools:toggle_profiler', longTicks)
+            .done(function (response) {
+               self._profilerCb(response);
             });
       }
    }
-
 });
 

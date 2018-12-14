@@ -12,7 +12,7 @@ function Commands:interrupt_ai(session, response, entity)
       end)
 end
 
-function Commands:create_and_place_entity(session, response, uri, iconic)
+function Commands:create_and_place_entity(session, response, uri, iconic, timesNine)
    local entity = radiant.entities.create_entity(uri)
    local entity_forms = entity:get_component('stonehearth:entity_forms')
 
@@ -20,15 +20,27 @@ function Commands:create_and_place_entity(session, response, uri, iconic)
       entity = entity_forms:get_iconic_entity()
    end
 
+   stonehearth.selection:deactivate_all_tools()
    stonehearth.selection:select_location()
       :set_cursor_entity(entity)
       :done(function(selector, location, rotation)
-            _radiant.call('debugtools:create_entity', uri, iconic, location, rotation)
-               :done(function()
-                  radiant.entities.destroy_entity(entity)
-                  response:resolve(true)
-               end)
-         end)
+               if timesNine == true then
+                  for x=-1,1 do
+                     for z=-1,1 do
+                        --leave the center one (+0,0) to the call outside the loop, so that it can clean up the entity
+                        if x~=0 or z~=0 then
+                           _radiant.call('debugtools:create_entity', uri, iconic, location + Point3(x,0,z), rotation)
+                        end
+                     end
+                  end
+               end
+
+               _radiant.call('debugtools:create_entity', uri, iconic, location, rotation)
+                  :done(function()
+                     radiant.entities.destroy_entity(entity)
+                     response:resolve(true)
+                  end)
+            end)
       :fail(function(selector)
             selector:destroy()
             response:reject('no location')
@@ -242,20 +254,44 @@ function Commands:remove_trait_command(session, response, entity, trait)
    return true
 end
 
-function Commands:promote_to_command(session, response, entity, job)
+function Commands:promote_to_command(session, response, entity, job, desired_level)
+   if not job then
+      response:reject('Failed: No job name provided.')
+      return 
+   end
+
    if not string.find(job, ':') and not string.find(job, '/') then
       -- as a convenience for autotest writers, stick the stonehearth:job on
       -- there if they didn't put it there to begin with
       job = 'stonehearth:jobs:' .. job
    end
 
-   --radiant.entities.drop_carrying_on_ground(entity)
-   entity:get_component('stonehearth:job')
-         :promote_to(job)
+   --radiant.entities.drop_carrying_on_ground(entity) 
+   local job_component = entity:get_component('stonehearth:job')
+   if(job_component) then
+
+      local skip_visual_effects = (desired_level and desired_level > 1) --if a level was provided, assume that will pop a dialog instead
+      job_component:promote_to(job, {skip_visual_effects=skip_visual_effects})  --skipping visual effects also skips the "X became a Y!" announcement
+
+      if desired_level then
+         local current_level = job_component:get_current_job_level()
+         local num_levelups_required = desired_level - current_level;
+
+         --condition starts false if we're already at/above desired level
+         for i=1, num_levelups_required do
+            local hide_effects = (i ~= num_levelups_required) --only show effects and announcement for final levelup. true = hide effects for some reason
+            job_component:level_up(hide_effects) 
+         end
+      end
+   else
+      response:reject('Failed: Selected entity has no job data: ' .. tostring(entity))
+      return 
+   end
+
    return true
 end
 
-function Commands:add_citizen_command(session, response, job)
+function Commands:add_citizen_command(session, response, job, desired_level)
    local player_id = session.player_id
    local pop = stonehearth.population:get_population(player_id)
    local citizen = pop:create_new_citizen()
@@ -263,10 +299,8 @@ function Commands:add_citizen_command(session, response, job)
    if not job then
       job = 'worker'
    end
-   job = 'stonehearth:jobs:' .. job
 
-   citizen:add_component('stonehearth:job')
-               :promote_to(job)
+   Commands:promote_to_command(session, response, citizen, job, desired_level)
 
    local explored_region = stonehearth.terrain:get_visible_region(player_id):get()
    local centroid = explored_region:get_centroid():to_closest_int()
@@ -507,9 +541,9 @@ function Commands:spawn_encounter_command(session, response, campaign_name, enco
       override_info = args
    }
 
-   stonehearth.game_master:set_ignore_start_requirements(true)
-   stonehearth.game_master:debug_trigger_campaign_encounter(options)
-   stonehearth.game_master:set_ignore_start_requirements(false)
+   stonehearth.game_master:get_game_master(session.player_id):set_ignore_start_requirements(true)
+   stonehearth.game_master:get_game_master(session.player_id):debug_trigger_campaign_encounter(options)
+   stonehearth.game_master:get_game_master(session.player_id):set_ignore_start_requirements(false)
    response:resolve({})
 
 end
@@ -586,6 +620,13 @@ function Commands:toggle_profiler(session, response, long_ticks)
    response:resolve({profiler_enabled = PROFILER_ENABLED, long_ticks_only = PROFILER_LONG_TICKS})
 end
 
+-- A hack, but since we don't keep track of the max_profile_length
+-- allow perfmon to set this manually since it tries to estimate the end time
+function Commands:on_profiler_disabled(session, response)
+   PROFILER_ENABLED = false
+   response:resolve({profiler_enabled = PROFILER_ENABLED, long_ticks_only = PROFILER_LONG_TICKS})
+end
+
 function Commands:print_ai_stack_command(session, response, entity)
    if not radiant.entities.is_entity(entity) then
       response:reject('unknown entity')
@@ -653,8 +694,9 @@ function Commands:get_conversation_actives_command(session, response, entity)
    end
 end
 
-function Commands:set_enable_animation_text_command(session, response, bool)
-   radiant.util.set_global_config('enable_effect_triggers', bool)
+function Commands:show_animation_text_command(session, response, bool)
+   radiant.util.set_global_config('mods.stonehearth.show_animation_text', bool)
+   return true
 end
 
 function Commands:exec_script_server(session, response, script, entity)
@@ -691,16 +733,23 @@ function Commands:exec_script(session, response, script, entity)
          output = '<nil>'
       elseif type(result) == 'string' then
          output = string.gsub(string.format('%q', result), '\n', 'n')
-      elseif type(result) == 'table' then
-         output = radiant.util.table_tostring(result)
       else
-         output = tostring(result)
+         -- Complex type. See if we can tostring it safely.
+         success, output = pcall(function()
+               if type(result) == 'table' then
+                  return radiant.util.table_tostring(result)
+               else
+                  return tostring(result)
+               end
+            end)
+         if not success then
+            output = '<unformattable object>'
+         end
       end
       response:resolve(output)
    else
       response:reject('ERROR: ' .. result)
    end
-   return true
 end
 
 return Commands

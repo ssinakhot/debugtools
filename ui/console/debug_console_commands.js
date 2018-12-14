@@ -285,19 +285,20 @@ $(document).ready(function(){
    radiant.console.register('promote_to', {
       call: function(cmdobj, fn, args) {
          var job = args._[0];
+         var level = args._[1];
          if (selected) {
-            return radiant.call('debugtools:promote_to_command', selected, job);
+            return radiant.call('debugtools:promote_to_command', selected, job, level);
          }
          return false;
       },
-      description: "Instantly promote the selected hearthling to the specified job (must specify full alias for mods, i.e. fancy_mod:jobs:fancy_chef). Usage: promote_to footman"
+      description: "Instantly promote the selected hearthling to the specified job, optionally with a desired level (must specify full alias for mods, i.e. fancy_mod:jobs:fancy_chef). Usage: promote_to footman opt_job_level"
    });
 
    radiant.console.register('add_citizen', {
       call: function(cmdobj, fn, args) {
-         return radiant.call('debugtools:add_citizen_command', args._[0]);
+         return radiant.call('debugtools:add_citizen_command', args._[0], args._[1]);
       },
-      description: "Add a new hearthling to your town. Usage: add_citizen opt_promote_to"
+      description: "Add a new hearthling to your town. Usage: add_citizen opt_promote_to opt_job_level"
    });
 
    radiant.console.register('dump_backpack', {
@@ -528,6 +529,27 @@ $(document).ready(function(){
       debugMenuNameOverride: "Make Hurt"
    });
 
+   radiant.console.register('make_lonely', {
+      call: function(cmdobj, fn, args) {
+         if (!selected) {
+            return "must select something";
+         }
+         var resource = 'social_satisfaction';
+         var val = 1;
+         return radiant.call('debugtools:set_expendable_resource_command', selected, resource, val);
+      },
+      description: "Makes the selected entity have a low social satisfaction. Usage: make_lonely",
+
+      test: function(entity) {
+         var resources = entity.get('stonehearth:expendable_resources');
+         if (resources && resources.resources && (resources.resources.social_satisfaction != null)) {
+            return true;
+         }
+         return false;
+      },
+      debugMenuNameOverride: "Make Lonely"
+   });
+
    radiant.console.register('hotload_manifest', {
       call: function(cmdobj, fn, args) {
          var manifest = args._[0];
@@ -535,6 +557,8 @@ $(document).ready(function(){
             manifest = "/rayyas_children/ui/manifest.json";
          }
 
+         radiant.call("debugtools:hot_reload_server");
+         radiant.call("debugtools:hot_reload_client");
          return radiant.call('radiant:hotload_manifest', manifest)
       },
       description: "hot load a manifest",
@@ -901,13 +925,13 @@ $(document).ready(function(){
       description: "Gets all active conversation subjects for an entity."
    });
 
-   radiant.console.register('enable_animation_text', {
+   radiant.console.register('show_animation_text', {
       call: function(cmdobj, fn, args) {
          var value = args._[0];
          value = (value == "false") ? false : true;
-         return radiant.call('debugtools:set_enable_animation_text_command', value);
+         return radiant.call('debugtools:show_animation_text_command', value);
       },
-      description: "Enable to display text over a hearthling's head that shows what animation they are currently playing. Need to restart / reload game to have it take effect. Usage: enable_animation_text true/false"
+      description: "Enable to display text over a hearthling's head that shows what animation they are currently playing. Need to restart / reload game to have it take effect. Usage: show_animation_text true/false"
    });
 
    /* -- this is dangerous, but useful for memory profiling*/

@@ -9,7 +9,7 @@
          action: {{name}}<br>
          args: {{args}}<br>
          state: {{parsed_state}}<br>
-         priority: {{priority}}
+         utility: {{utility}}
       {{/if}}
       {{#if activity}}
          activity name: {{name}}<br>
@@ -51,10 +51,17 @@
          [<a href='#' {{action "closeWindow" target="view"}}>close window</a>]
       </div>
 
+      <div id="header">
+         {{#if view.model.debug_info }}
+         {{#view "stonehearthAiThread" uriBinding="view.model.debug_info" }}
+         Entity Name: {{view.model.entity_name}}
+         {{/view}}
+         {{/if}}
+         <input id="search" type="text" placeholder="Search..." />
+      </div>
       <div id="content">
          {{#if view.model.debug_info }}
             {{#view "stonehearthAiThread" uriBinding="view.model.debug_info" }}
-               Entity Name: {{view.model.entity_name}}
                {{ view "stonehearthExecutionFrame" uriBinding="view.model.execution_frame" }}
             {{/view}}
          {{/if}}
@@ -63,33 +70,45 @@
          {{i18n debugtools:ui.entity_inspector.key}}:
          <span class="thinking">{{i18n debugtools:ui.entity_inspector.thinking}}</span>,
          <span class="ready">{{i18n debugtools:ui.entity_inspector.ready}}</span>,
-         <span class="stopped-waiting">{{i18n debugtools:ui.entity_inspector.stopped_waiting}}</span>,
-         <span class="stopped-not_selected">{{i18n debugtools:ui.entity_inspector.stopped_not_selected}}</span>,
+         <span class="stopped">{{i18n debugtools:ui.entity_inspector.stopped}}</span>,
          <span class="started">{{i18n debugtools:ui.entity_inspector.started}}</span>,
          <span class="running">{{i18n debugtools:ui.entity_inspector.running}}</span>,
          <span class="finished">{{i18n debugtools:ui.entity_inspector.finished}}</span>,
-         <span class="dead">{{i18n debugtools:ui.entity_inspector.dead}}</span>
+         <span class="potential">{{i18n debugtools:ui.entity_inspector.potential}}</span>
          <br>
          {{i18n debugtools:ui.entity_inspector.row_key}}:
-         <span>f = {{i18n debugtools:ui.entity_inspector.execution_frame}},</span>
-         <span>u = {{i18n debugtools:ui.entity_inspector.execution_unit}},</span>
-         <span>ca = {{i18n debugtools:ui.entity_inspector.compound_action}}</span>
+         <span>f = {{i18n debugtools:ui.entity_inspector.execution_frame}}; </span>
+         <span>u = {{i18n debugtools:ui.entity_inspector.execution_unit}}; </span>
+         <span>la = {{i18n debugtools:ui.entity_inspector.leaf_action}}; </span>
+         <span>ca = {{i18n debugtools:ui.entity_inspector.compound_action}}; </span>
+         <span>ga = {{i18n debugtools:ui.entity_inspector.task_group_action}}; </span>
+         <span>ta = {{i18n debugtools:ui.entity_inspector.task_action}}</span>
       </div>
    </div> 
 </script>
 
 <script type="text/x-handlebars" data-template-name="executionFrame">
    <div class="row" {{bind-attr row_id="id"}}>
-      {{{view.model.id}}}
-      <span id="state" {{bind-attr class="view.model.state"}} {{bind-attr style="view.styleOverride"}}>{{{view.model.name}}} 
-      {{#if view.model.priority}}
-          P({{{view.model.priority}}})
-      {{/if}}
-
+      <span class="modelId">{{view.model.id}}</span>
+      <span id="state" {{bind-attr class="view.model.state"}} {{bind-attr style="view.styleOverride"}}>
+         <a href="#" class="collapser">-</a>
+         {{#if view.model.name}}
+            {{view.model.name}}
+         {{else}}
+            <span id="activity" class="activity">
+               &lt;{{view.model.does}}&gt;
+            </span>
+         {{/if}}
+         U={{view.model.utility}}
+         {{#if view.model.effective_utility}}
+            {{view.model.effective_utility}}
+         {{/if}}
       </span>
-      <span id="activity" class="activity"> - {{{view.model.does}}} </span> <br>
       {{#if view.model.progress }}
-         {{{view.model.id}}} <span {{bind-attr class="view.model.pathfinder_data:steppablePath:"}} {{bind-attr style="view.styleOverride"}} {{action 'stepThis' view.model.pathfinder_data target="view"}}>{{{view.model.progress}}}</span>
+         <span {{bind-attr class=":progress view.model.pathfinder_data:steppablePath:"}} {{action 'stepThis' view.model.pathfinder_data target="view"}}>&mdash; {{view.model.progress}}</span>
+      {{/if}}
+      {{#if view.model.args }}
+         <span class="args">{{view.model.args}}</span>
       {{/if}}
    </div> 
    {{#each frame in view.model.children}}
