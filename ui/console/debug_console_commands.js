@@ -51,6 +51,13 @@ $(document).ready(function(){
       }
    });
 
+   radiant.console.register('toggle_dock', {
+      call: function(cmdobj, fn, args) {
+         App.debugDock.toggle();
+      },
+      description: "Toggle the debug dock"
+   });
+
    radiant.console.register('add_gold', {
       call: function(cmdobj, fn, args) {
          var goldAmount = 100;
