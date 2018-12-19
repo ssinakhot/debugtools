@@ -51,11 +51,23 @@ $(document).ready(function(){
       }
    });
 
+   radiant.console.register('save_game', {
+      call: function(cmdobj, fn, args) {
+         if (args._[0] && args._[1]) { 
+            App.stonehearthClient._saveMenu._saveGame(args._[0], args._[1]);
+            return true;
+         }
+         return false;
+      },
+      description: "Save game with specified folder name and save game name. Usage: save_game folderName saveName "
+   });
+
    radiant.console.register('toggle_dock', {
       call: function(cmdobj, fn, args) {
          App.debugDock.toggle();
+         return true;
       },
-      description: "Toggle the debug dock"
+      description: "Toggle the debug dock."
    });
 
    radiant.console.register('add_gold', {

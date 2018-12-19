@@ -8,7 +8,6 @@ App.StonehearthDebugDockView = App.ContainerView.extend({
    init: function() {
       this._super();
       var self = this;
-      self.set('isVisible', false);
 
       setInterval(function () {
          if (self.$()) {
@@ -19,6 +18,7 @@ App.StonehearthDebugDockView = App.ContainerView.extend({
 
    addToDock: function(ctor) {
       this.addView(ctor);
+      this.set('isVisible', false);
    },
 
    toggle: function() {
