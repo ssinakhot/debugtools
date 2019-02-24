@@ -1,4 +1,4 @@
-debugtools_enhanced = {
+debugtools = {
 }
 
 local service_creation_order = {
@@ -31,4 +31,4 @@ radiant.events.listen(debugtools, 'radiant:init', function()
       end
    end)
 
-return debugtools_enhanced
+return debugtools

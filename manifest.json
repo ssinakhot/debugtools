@@ -1,7 +1,7 @@
 {
    "info": {
       "name": "Debug Tools Enhanced",
-      "namespace": "debugtools_enhanced",
+      "namespace": "debugtools",
       "version": 3,
       "is_debug_mod": true,
       "default_enabled": false,
