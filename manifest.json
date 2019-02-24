@@ -1,10 +1,11 @@
 {
    "info": {
-      "name": "Debug Tools",
-      "namespace": "debugtools",
+      "name": "Debug Tools Enhanced",
+      "namespace": "debugtools_enhanced",
       "version": 3,
       "is_debug_mod": true,
-      "default_enabled": false
+      "default_enabled": false,
+      "steam_file_id": "1665160724"
    },
    "server_init_script": "file(debugtools_server)",
    "ui": {
